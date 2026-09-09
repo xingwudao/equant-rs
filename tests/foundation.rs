@@ -41,6 +41,26 @@ fn rolling_std_preserves_small_variation_around_large_values() {
 }
 
 #[test]
+fn rolling_std_stays_stable_after_many_window_updates() {
+    let input: Vec<f64> = (0..13_000)
+        .map(|index| 1.0e12 + (0.1 * index as f64).sin())
+        .collect();
+    let out = rolling_std(&input, 20, false).unwrap();
+    let index = 12_277;
+    let window = &input[index + 1 - 20..=index];
+    let origin = window[0];
+    let mean = window.iter().map(|value| value - origin).sum::<f64>() / 20.0;
+    let expected = (window
+        .iter()
+        .map(|value| (value - origin - mean).powi(2))
+        .sum::<f64>()
+        / 20.0)
+        .sqrt();
+    assert_relative_eq!(out[index], expected, epsilon = 1e-12);
+    assert!(out[19..].iter().all(|value| *value > 0.0));
+}
+
+#[test]
 fn ema_uses_sma_seed_and_resets_after_missing_data() {
     let out = ema(&[1.0, 2.0, 3.0, 4.0, f64::NAN, 6.0, 7.0, 8.0], 3, false).unwrap();
     assert_eq!(out[2], 2.0);

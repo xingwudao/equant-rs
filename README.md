@@ -123,6 +123,11 @@ Version 0.1 focuses only on batch slice APIs. Streaming indicators, Python
 bindings, DataFrame adapters, factor libraries, and backtesting are possible
 future packages, not hidden commitments in this release.
 
+This is the initial API release, not a TA-Lib compatibility certification.
+Every operator has a direct execution test, while hand-calculated fixtures and
+property tests currently cover representative formulas. The conformance matrix
+against independent implementations will continue to expand before 1.0.
+
 ## License
 
 MIT

@@ -93,8 +93,10 @@ pub fn rolling_std(input: &[f64], period: usize, sample: bool) -> Result<Vec<f64
         return Err(IndicatorError::InvalidParameter("sample period"));
     }
     let mut output = vec![f64::NAN; input.len()];
-    let mut mean = 0.0;
-    let mut m2 = 0.0;
+    let mut origin = 0.0;
+    let mut anchor = None;
+    let mut sum = 0.0;
+    let mut sum_squared = 0.0;
     let mut finite = 0usize;
     let denominator = if sample { period - 1 } else { period } as f64;
 
@@ -102,27 +104,52 @@ pub fn rolling_std(input: &[f64], period: usize, sample: bool) -> Result<Vec<f64
         if index >= period {
             let old = input[index - period];
             if old.is_finite() {
-                if finite == 1 {
-                    mean = 0.0;
-                    m2 = 0.0;
-                    finite = 0;
-                } else {
-                    let new_count = finite - 1;
-                    let new_mean = mean - (old - mean) / new_count as f64;
-                    m2 -= (old - mean) * (old - new_mean);
-                    mean = new_mean;
-                    finite = new_count;
-                }
+                let shifted = old - origin;
+                sum -= shifted;
+                sum_squared -= shifted * shifted;
+                finite -= 1;
             }
         }
         if value.is_finite() {
+            if finite == 0 {
+                origin = value;
+                anchor = Some(index);
+            }
+            let shifted = value - origin;
+            sum += shifted;
+            sum_squared += shifted * shifted;
             finite += 1;
-            let delta = value - mean;
-            mean += delta / finite as f64;
-            m2 += delta * (value - mean);
+        }
+
+        if index >= period && anchor.is_some_and(|anchor| anchor <= index - period) {
+            let start = index + 1 - period;
+            if let Some(offset) = input[start..=index]
+                .iter()
+                .rposition(|value| value.is_finite())
+            {
+                anchor = Some(start + offset);
+                origin = input[start + offset];
+                sum = 0.0;
+                sum_squared = 0.0;
+                finite = 0;
+                for &window_value in &input[start..=index] {
+                    if window_value.is_finite() {
+                        let shifted = window_value - origin;
+                        sum += shifted;
+                        sum_squared += shifted * shifted;
+                        finite += 1;
+                    }
+                }
+            } else {
+                anchor = None;
+                origin = 0.0;
+                sum = 0.0;
+                sum_squared = 0.0;
+                finite = 0;
+            }
         }
         if index + 1 >= period && finite == period {
-            let variance = (m2 / denominator).max(0.0);
+            let variance = ((sum_squared - sum * sum / period as f64) / denominator).max(0.0);
             output[index] = variance.sqrt();
         }
     }
