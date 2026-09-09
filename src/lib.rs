@@ -6,6 +6,8 @@ mod internal;
 
 /// Trend-following averages, oscillators, and directional measures.
 pub mod trend;
+/// Momentum, strength, and bounded oscillator measures.
+pub mod momentum;
 
 pub use error::IndicatorError;
 
