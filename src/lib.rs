@@ -1,5 +1,5 @@
 #![forbid(unsafe_code)]
-#![doc = "Pure Rust batch quantitative finance operators over borrowed slices."]
+#![doc = include_str!("../README.md")]
 
 mod error;
 mod internal;
