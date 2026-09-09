@@ -8,6 +8,8 @@ mod internal;
 pub mod trend;
 /// Momentum, strength, and bounded oscillator measures.
 pub mod momentum;
+/// Price-range, channel, and historical volatility measures.
+pub mod volatility;
 
 pub use error::IndicatorError;
 

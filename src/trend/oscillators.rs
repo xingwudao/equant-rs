@@ -1,4 +1,4 @@
-use crate::internal::{rolling, smoothing, validation};
+use crate::internal::{rolling, validation};
 use crate::trend::moving_average::{ema, zip_map};
 use crate::IndicatorError;
 
