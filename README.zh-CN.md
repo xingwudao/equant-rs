@@ -7,7 +7,20 @@ Rust 的性能、类型安全和部署优势。
 首版提供 60 个趋势、动量、波动率、成交量、价格结构和序列变换量化算子。
 项目定位是高性能量化算子、AI 量化基础设施、Rust 技术指标库和批量 OHLCV
 市场数据特征计算核心。核心 API 只接收单资产、按时间排序的 `f64` 切片，
-不依赖 Python、Pandas、NumPy、OpenXQuant、TA-Lib 或 C 语言库。
+不依赖 [Python](https://github.com/python/cpython)、
+[Pandas](https://github.com/pandas-dev/pandas)、
+[NumPy](https://github.com/numpy/numpy)、
+[open-xquant](https://github.com/xingwudao/open-xquant)、
+[TA-Lib](https://github.com/TA-Lib/ta-lib) 或 C 语言库。
+
+## 相关项目
+
+- [equant-py](https://github.com/xingwudao/equant-py)：原 Python 版本仓库，
+  面向 long-format panel data、算子候选包和 open-xquant 兼容工件。
+- [open-xquant](https://github.com/xingwudao/open-xquant)：AI Agent 驱动的
+  量化研究框架，覆盖策略回测、因子研究、稳健性检验、审计报告和实盘流程。
+- [TA-Lib](https://github.com/TA-Lib/ta-lib)：经典 C 技术分析指标库。
+  `equant` 是纯 Rust 实现，不是 TA-Lib wrapper。
 
 ## 快速开始
 

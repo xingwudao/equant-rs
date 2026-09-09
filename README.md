@@ -11,9 +11,25 @@ for AI quantitative infrastructure, historical research, feature generation,
 algorithmic trading experiments, and batch market data pipelines.
 
 This crate is not a backtesting engine, broker client, DataFrame library, or
-TA-Lib binding. It does not require Python, C, OpenXQuant, Pandas, or NumPy.
+[TA-Lib](https://github.com/TA-Lib/ta-lib) binding. It does not require
+[Python](https://github.com/python/cpython), C,
+[open-xquant](https://github.com/xingwudao/open-xquant),
+[Pandas](https://github.com/pandas-dev/pandas), or
+[NumPy](https://github.com/numpy/numpy).
 
 Chinese documentation: [README.zh-CN.md](README.zh-CN.md)
+
+## Related Projects
+
+- [equant-py](https://github.com/xingwudao/equant-py): the original Python
+  operator candidate library for long-format panel data and open-xquant
+  compatibility artifacts.
+- [open-xquant](https://github.com/xingwudao/open-xquant): the AI-driven
+  quantitative research framework for strategy backtests, factor research,
+  robustness checks, audit reports, and live trading workflows.
+- [TA-Lib](https://github.com/TA-Lib/ta-lib): the established C technical
+  analysis library that inspired part of the broader operator-library problem
+  space. `equant` is a pure Rust implementation, not a TA-Lib wrapper.
 
 ## Why equant
 
