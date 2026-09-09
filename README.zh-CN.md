@@ -1,12 +1,13 @@
 # equant
 
-`equant` 是面向 AI 生成 Rust 代码的纯 Rust 批量量化算子库。用户可以让
-AI 根据研究需求生成小型 Rust 程序，在不亲自掌握 Rust 的情况下使用其性能、
-类型安全和部署优势。
+`equant` 是面向 AI 生成 Rust 代码的高性能纯 Rust 批量量化算子库。用户
+可以让 AI 根据研究需求生成小型 Rust 程序，在不亲自掌握 Rust 的情况下使用
+Rust 的性能、类型安全和部署优势。
 
-首版提供 60 个趋势、动量、波动率、成交量、价格结构和序列变换算子。
-核心 API 只接收单资产、按时间排序的 `f64` 切片，不依赖 Python、Pandas、
-NumPy、OpenXQuant、TA-Lib 或 C 语言库。
+首版提供 60 个趋势、动量、波动率、成交量、价格结构和序列变换量化算子。
+项目定位是高性能量化算子、AI 量化基础设施、Rust 技术指标库和批量 OHLCV
+市场数据特征计算核心。核心 API 只接收单资产、按时间排序的 `f64` 切片，
+不依赖 Python、Pandas、NumPy、OpenXQuant、TA-Lib 或 C 语言库。
 
 ## 快速开始
 
@@ -43,6 +44,17 @@ fn main() -> Result<(), equant::IndicatorError> {
 - 递归指标遇到非有限值后重新预热。
 - 参数或切片长度错误通过 `IndicatorError` 返回，不触发 panic。
 - 多输出指标使用带字段名的结果结构。
+
+## 搜索定位
+
+这个仓库优先服务以下关键词和使用场景：
+
+- 高性能量化算子
+- AI 量化基础设施
+- Rust 技术指标库
+- 批量 OHLCV 指标
+- 算法交易特征工程
+- 纯 Rust 替代 C/Python 指标栈
 
 ## 首版边界
 

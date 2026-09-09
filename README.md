@@ -1,14 +1,14 @@
 # equant
 
-`equant` is an AI-first, pure Rust quantitative finance library for batch
-technical analysis indicators and market-data operators. It gives
-AI-generated Rust programs a small, predictable API over borrowed `f64`
+`equant` is an AI-first, high-performance pure Rust quantitative finance
+library for batch technical analysis indicators and market-data operators. It
+gives AI-generated Rust programs a small, predictable API over borrowed `f64`
 slices, with no runtime dependencies.
 
-The first release includes 60 operators for trend, momentum, volatility,
-volume, market structure, and sequence transforms. It is designed for
-historical research, feature generation, algorithmic trading experiments,
-and batch market data pipelines.
+The first release includes 60 quantitative operators for trend, momentum,
+volatility, volume, market structure, and sequence transforms. It is designed
+for AI quantitative infrastructure, historical research, feature generation,
+algorithmic trading experiments, and batch market data pipelines.
 
 This crate is not a backtesting engine, broker client, DataFrame library, or
 TA-Lib binding. It does not require Python, C, OpenXQuant, Pandas, or NumPy.
@@ -17,7 +17,8 @@ Chinese documentation: [README.zh-CN.md](README.zh-CN.md)
 
 ## Why equant
 
-- Pure Rust with no runtime dependencies or unsafe code.
+- High-performance Rust implementation with no runtime dependencies or unsafe
+  code.
 - Equal-length outputs aligned with input slices.
 - Explicit warmup and non-finite-value behavior.
 - Named result types for multi-output indicators.
@@ -93,6 +94,13 @@ Multi-output functions return structs with named `Vec<f64>` fields.
 
 See [OPERATORS.md](OPERATORS.md) for the complete searchable catalog and
 formula conventions.
+
+## Search Keywords
+
+This project is intentionally positioned around high-performance quantitative
+operators, Rust technical analysis indicators, AI quant infrastructure,
+algorithmic trading features, batch OHLCV indicators, market-data operators,
+and pure Rust alternatives to C/Python indicator stacks.
 
 ## Correctness
 
