@@ -14,6 +14,8 @@ pub mod volatility;
 pub mod volume;
 /// Price structure, swing, pivot, and stop-and-reverse operators.
 pub mod structure;
+/// Generic sequence transforms, regression, and discrete setup counts.
+pub mod transform;
 
 pub use error::IndicatorError;
 
