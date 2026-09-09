@@ -31,4 +31,3 @@ pub(crate) fn positive(value: f64, name: &'static str) -> Result<(), IndicatorEr
         Err(IndicatorError::InvalidParameter(name))
     }
 }
-

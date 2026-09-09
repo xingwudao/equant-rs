@@ -9,7 +9,11 @@ fn require_ohlcv(
 ) -> Result<(), IndicatorError> {
     validation::same_length(
         high.len(),
-        &[("low", low.len()), ("close", close.len()), ("volume", volume.len())],
+        &[
+            ("low", low.len()),
+            ("close", close.len()),
+            ("volume", volume.len()),
+        ],
     )
 }
 
@@ -45,7 +49,11 @@ pub fn clv(high: &[f64], low: &[f64], close: &[f64]) -> Result<Vec<f64>, Indicat
         .map(|index| {
             if high[index].is_finite() && low[index].is_finite() && close[index].is_finite() {
                 let range = high[index] - low[index];
-                if range == 0.0 { 0.0 } else { (2.0 * close[index] - high[index] - low[index]) / range }
+                if range == 0.0 {
+                    0.0
+                } else {
+                    (2.0 * close[index] - high[index] - low[index]) / range
+                }
             } else {
                 f64::NAN
             }
@@ -67,7 +75,11 @@ pub fn cmf(
         .iter()
         .zip(volume)
         .map(|(&location, &volume)| {
-            if location.is_finite() && volume.is_finite() { location * volume } else { f64::NAN }
+            if location.is_finite() && volume.is_finite() {
+                location * volume
+            } else {
+                f64::NAN
+            }
         })
         .collect();
     let numerator = rolling::rolling_sum(&money_volume, period)?;
@@ -77,7 +89,11 @@ pub fn cmf(
         .zip(denominator)
         .map(|(&numerator, denominator)| {
             if numerator.is_finite() && denominator.is_finite() {
-                if denominator == 0.0 { 0.0 } else { numerator / denominator }
+                if denominator == 0.0 {
+                    0.0
+                } else {
+                    numerator / denominator
+                }
             } else {
                 f64::NAN
             }
@@ -96,7 +112,10 @@ pub fn vwap(
     require_ohlcv(high, low, close, volume)?;
     let weighted: Vec<f64> = (0..high.len())
         .map(|index| {
-            if [high[index], low[index], close[index], volume[index]].iter().all(|v| v.is_finite()) {
+            if [high[index], low[index], close[index], volume[index]]
+                .iter()
+                .all(|v| v.is_finite())
+            {
                 (high[index] + low[index] + close[index]) / 3.0 * volume[index]
             } else {
                 f64::NAN
@@ -139,10 +158,19 @@ pub fn mfi(
     let mut positive = vec![f64::NAN; high.len()];
     let mut negative = vec![f64::NAN; high.len()];
     for index in 1..high.len() {
-        if typical[index].is_finite() && typical[index - 1].is_finite() && volume[index].is_finite() {
+        if typical[index].is_finite() && typical[index - 1].is_finite() && volume[index].is_finite()
+        {
             let flow = typical[index] * volume[index];
-            positive[index] = if typical[index] > typical[index - 1] { flow } else { 0.0 };
-            negative[index] = if typical[index] < typical[index - 1] { flow } else { 0.0 };
+            positive[index] = if typical[index] > typical[index - 1] {
+                flow
+            } else {
+                0.0
+            };
+            negative[index] = if typical[index] < typical[index - 1] {
+                flow
+            } else {
+                0.0
+            };
         }
     }
     let positive = rolling::rolling_sum(&positive, period)?;
@@ -152,9 +180,13 @@ pub fn mfi(
         .zip(negative)
         .map(|(&positive, negative)| {
             if positive.is_finite() && negative.is_finite() {
-                if positive == 0.0 && negative == 0.0 { 50.0 }
-                else if negative == 0.0 { 100.0 }
-                else { 100.0 - 100.0 / (1.0 + positive / negative) }
+                if positive == 0.0 && negative == 0.0 {
+                    50.0
+                } else if negative == 0.0 {
+                    100.0
+                } else {
+                    100.0 - 100.0 / (1.0 + positive / negative)
+                }
             } else {
                 f64::NAN
             }
@@ -172,13 +204,23 @@ pub fn emv(
     validation::same_length(high.len(), &[("low", low.len()), ("volume", volume.len())])?;
     let mut raw = vec![f64::NAN; high.len()];
     for index in 1..high.len() {
-        if [high[index], low[index], high[index - 1], low[index - 1], volume[index]]
-            .iter()
-            .all(|value| value.is_finite())
+        if [
+            high[index],
+            low[index],
+            high[index - 1],
+            low[index - 1],
+            volume[index],
+        ]
+        .iter()
+        .all(|value| value.is_finite())
         {
             let distance = (high[index] + low[index] - high[index - 1] - low[index - 1]) / 2.0;
             let range = high[index] - low[index];
-            raw[index] = if volume[index] == 0.0 { 0.0 } else { distance * range / volume[index] };
+            raw[index] = if volume[index] == 0.0 {
+                0.0
+            } else {
+                distance * range / volume[index]
+            };
         }
     }
     rolling::rolling_mean(&raw, period)
@@ -218,7 +260,13 @@ pub fn chaikin_volatility(
     let range: Vec<f64> = high
         .iter()
         .zip(low)
-        .map(|(&high, &low)| if high.is_finite() && low.is_finite() { high - low } else { f64::NAN })
+        .map(|(&high, &low)| {
+            if high.is_finite() && low.is_finite() {
+                high - low
+            } else {
+                f64::NAN
+            }
+        })
         .collect();
     let smoothed = smoothing::ema(&range, ema_period, false)?;
     let mut output = vec![f64::NAN; high.len()];
@@ -232,11 +280,7 @@ pub fn chaikin_volatility(
 }
 
 /// Williams Accumulation/Distribution line.
-pub fn williams_ad(
-    high: &[f64],
-    low: &[f64],
-    close: &[f64],
-) -> Result<Vec<f64>, IndicatorError> {
+pub fn williams_ad(high: &[f64], low: &[f64], close: &[f64]) -> Result<Vec<f64>, IndicatorError> {
     validation::same_length(high.len(), &[("low", low.len()), ("close", close.len())])?;
     let mut output = vec![f64::NAN; close.len()];
     let mut cumulative = 0.0;
@@ -244,7 +288,10 @@ pub fn williams_ad(
         output[0] = 0.0;
     }
     for index in 1..close.len() {
-        if [high[index], low[index], close[index], close[index - 1]].iter().all(|v| v.is_finite()) {
+        if [high[index], low[index], close[index], close[index - 1]]
+            .iter()
+            .all(|v| v.is_finite())
+        {
             let movement = if close[index] > close[index - 1] {
                 close[index] - low[index].min(close[index - 1])
             } else if close[index] < close[index - 1] {

@@ -1,6 +1,5 @@
 use equant::momentum::{
-    cci, cmo, cti, dvi, kdj, momentum, roc, rsi, rvi, smi, stoch, tsi,
-    ultimate_oscillator, wpr,
+    cci, cmo, cti, dvi, kdj, momentum, roc, rsi, rvi, smi, stoch, tsi, ultimate_oscillator, wpr,
 };
 
 fn ohlc(length: usize) -> (Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>) {

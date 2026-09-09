@@ -1,7 +1,7 @@
 use approx::assert_relative_eq;
 use equant::trend::{
-    adx, alma, dema, dpo, ema, evwma, gmma, hma, kst, macd, po, sma, tdi, trix, vhf,
-    vwma, wma, zlema, KstConfig,
+    adx, alma, dema, dpo, ema, evwma, gmma, hma, kst, macd, po, sma, tdi, trix, vhf, vwma, wma,
+    zlema, KstConfig,
 };
 
 fn prices(length: usize) -> Vec<f64> {
@@ -28,7 +28,9 @@ fn all_trend_operators_return_equal_length_outputs() {
     let close = prices(160);
     let high: Vec<f64> = close.iter().map(|value| value + 1.0).collect();
     let low: Vec<f64> = close.iter().map(|value| value - 1.0).collect();
-    let volume: Vec<f64> = (0..close.len()).map(|index| 1_000.0 + index as f64).collect();
+    let volume: Vec<f64> = (0..close.len())
+        .map(|index| 1_000.0 + index as f64)
+        .collect();
     let n = close.len();
 
     for output in [

@@ -33,10 +33,18 @@ pub fn zigzag(
             continue;
         }
         let rises_enough = |new: f64, old: f64| {
-            if percent { new >= old * (1.0 + change / 100.0) } else { new - old >= change }
+            if percent {
+                new >= old * (1.0 + change / 100.0)
+            } else {
+                new - old >= change
+            }
         };
         let falls_enough = |new: f64, old: f64| {
-            if percent { new <= old * (1.0 - change / 100.0) } else { old - new >= change }
+            if percent {
+                new <= old * (1.0 - change / 100.0)
+            } else {
+                old - new >= change
+            }
         };
         match direction {
             0 => {
@@ -106,11 +114,7 @@ pub struct PivotOutput {
 }
 
 /// Calculate classic floor pivots from prior-period OHLC data.
-pub fn pivots(
-    high: &[f64],
-    low: &[f64],
-    close: &[f64],
-) -> Result<PivotOutput, IndicatorError> {
+pub fn pivots(high: &[f64], low: &[f64], close: &[f64]) -> Result<PivotOutput, IndicatorError> {
     require_high_low(high, low)?;
     validation::same_length(high.len(), &[("close", close.len())])?;
     let mut output = PivotOutput {
@@ -152,13 +156,19 @@ pub fn sar(
         return Ok(output);
     }
     let Some(start) = (0..high.len() - 1).find(|&i| {
-        [high[i], low[i], high[i + 1], low[i + 1]].iter().all(|value| value.is_finite())
+        [high[i], low[i], high[i + 1], low[i + 1]]
+            .iter()
+            .all(|value| value.is_finite())
     }) else {
         return Ok(output);
     };
     let mut long = (high[start + 1] + low[start + 1]) >= (high[start] + low[start]);
     let mut point = if long { low[start] } else { high[start] };
-    let mut extreme = if long { high[start + 1] } else { low[start + 1] };
+    let mut extreme = if long {
+        high[start + 1]
+    } else {
+        low[start + 1]
+    };
     let mut factor = acceleration;
     for index in start + 1..high.len() {
         if !high[index].is_finite() || !low[index].is_finite() {
@@ -229,8 +239,16 @@ pub fn snr(
         .iter()
         .zip(&support)
         .map(|(&resistance, &support)| {
-            if resistance.is_finite() && support.is_finite() { (resistance + support) / 2.0 } else { f64::NAN }
+            if resistance.is_finite() && support.is_finite() {
+                (resistance + support) / 2.0
+            } else {
+                f64::NAN
+            }
         })
         .collect();
-    Ok(SupportResistanceOutput { resistance, support, middle })
+    Ok(SupportResistanceOutput {
+        resistance,
+        support,
+        middle,
+    })
 }

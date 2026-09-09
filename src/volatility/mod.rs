@@ -10,10 +10,7 @@ pub fn tr(high: &[f64], low: &[f64], close: &[f64]) -> Result<Vec<f64>, Indicato
     require_ohlc(high, low, close)?;
     let mut output = vec![f64::NAN; high.len()];
     for index in 1..high.len() {
-        if high[index].is_finite()
-            && low[index].is_finite()
-            && close[index - 1].is_finite()
-        {
+        if high[index].is_finite() && low[index].is_finite() && close[index - 1].is_finite() {
             output[index] = (high[index] - low[index])
                 .max((high[index] - close[index - 1]).abs())
                 .max((low[index] - close[index - 1]).abs());
@@ -65,11 +62,25 @@ pub fn bollinger(
             upper[index] = middle[index] + deviations * deviation[index];
             lower[index] = middle[index] - deviations * deviation[index];
             let span = upper[index] - lower[index];
-            percent_b[index] = if span == 0.0 { 0.5 } else { (input[index] - lower[index]) / span };
-            width[index] = if middle[index] == 0.0 { f64::NAN } else { span / middle[index].abs() };
+            percent_b[index] = if span == 0.0 {
+                0.5
+            } else {
+                (input[index] - lower[index]) / span
+            };
+            width[index] = if middle[index] == 0.0 {
+                f64::NAN
+            } else {
+                span / middle[index].abs()
+            };
         }
     }
-    Ok(BollingerOutput { middle, upper, lower, percent_b, width })
+    Ok(BollingerOutput {
+        middle,
+        upper,
+        lower,
+        percent_b,
+        width,
+    })
 }
 
 /// Keltner Channel output.
@@ -103,7 +114,11 @@ pub fn keltner(
             lower[index] = middle[index] - multiplier * range[index];
         }
     }
-    Ok(KeltnerOutput { middle, upper, lower })
+    Ok(KeltnerOutput {
+        middle,
+        upper,
+        lower,
+    })
 }
 
 /// Donchian Channel output.
@@ -130,10 +145,18 @@ pub fn donchian(
         .iter()
         .zip(&lower)
         .map(|(&upper, &lower)| {
-            if upper.is_finite() && lower.is_finite() { (upper + lower) / 2.0 } else { f64::NAN }
+            if upper.is_finite() && lower.is_finite() {
+                (upper + lower) / 2.0
+            } else {
+                f64::NAN
+            }
         })
         .collect();
-    Ok(DonchianOutput { upper, lower, middle })
+    Ok(DonchianOutput {
+        upper,
+        lower,
+        middle,
+    })
 }
 
 /// Percentage Bands relative to the absolute moving average.
@@ -194,12 +217,25 @@ pub fn volatility(
     periods_per_year: f64,
     estimator: VolatilityEstimator,
 ) -> Result<Vec<f64>, IndicatorError> {
-    validation::same_length(open.len(), &[("high", high.len()), ("low", low.len()), ("close", close.len())])?;
+    validation::same_length(
+        open.len(),
+        &[
+            ("high", high.len()),
+            ("low", low.len()),
+            ("close", close.len()),
+        ],
+    )?;
     validation::period(period)?;
     validation::positive(periods_per_year, "periods_per_year")?;
     let mut per_bar = vec![f64::NAN; close.len()];
     for index in 1..close.len() {
-        let values = [open[index], high[index], low[index], close[index], close[index - 1]];
+        let values = [
+            open[index],
+            high[index],
+            low[index],
+            close[index],
+            close[index - 1],
+        ];
         if !values.iter().all(|value| value.is_finite() && *value > 0.0) {
             continue;
         }

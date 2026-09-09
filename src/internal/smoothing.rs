@@ -34,4 +34,3 @@ pub fn ema(input: &[f64], period: usize, wilder: bool) -> Result<Vec<f64>, Indic
     }
     Ok(output)
 }
-

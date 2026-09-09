@@ -1,6 +1,4 @@
-use equant::volume::{
-    chaikin_ad, chaikin_volatility, clv, cmf, emv, mfi, obv, vwap, williams_ad,
-};
+use equant::volume::{chaikin_ad, chaikin_volatility, clv, cmf, emv, mfi, obv, vwap, williams_ad};
 
 fn ohlcv(length: usize) -> (Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>) {
     let close: Vec<f64> = (0..length)
@@ -8,7 +6,9 @@ fn ohlcv(length: usize) -> (Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>) {
         .collect();
     let high: Vec<f64> = close.iter().map(|value| value + 1.0).collect();
     let low: Vec<f64> = close.iter().map(|value| value - 1.0).collect();
-    let volume: Vec<f64> = (0..length).map(|index| 1_000.0 + 10.0 * index as f64).collect();
+    let volume: Vec<f64> = (0..length)
+        .map(|index| 1_000.0 + 10.0 * index as f64)
+        .collect();
     (high, low, close, volume)
 }
 

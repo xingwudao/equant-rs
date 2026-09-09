@@ -21,11 +21,23 @@ pub fn rsi(input: &[f64], period: usize) -> Result<Vec<f64>, IndicatorError> {
     let changes = change(input);
     let gains: Vec<f64> = changes
         .iter()
-        .map(|value| if value.is_finite() { value.max(0.0) } else { f64::NAN })
+        .map(|value| {
+            if value.is_finite() {
+                value.max(0.0)
+            } else {
+                f64::NAN
+            }
+        })
         .collect();
     let losses: Vec<f64> = changes
         .iter()
-        .map(|value| if value.is_finite() { (-value).max(0.0) } else { f64::NAN })
+        .map(|value| {
+            if value.is_finite() {
+                (-value).max(0.0)
+            } else {
+                f64::NAN
+            }
+        })
         .collect();
     let average_gain = smoothing::ema(&gains, period, true)?;
     let average_loss = smoothing::ema(&losses, period, true)?;
@@ -92,11 +104,23 @@ pub fn cmo(input: &[f64], period: usize) -> Result<Vec<f64>, IndicatorError> {
     let changes = change(input);
     let gains: Vec<f64> = changes
         .iter()
-        .map(|value| if value.is_finite() { value.max(0.0) } else { f64::NAN })
+        .map(|value| {
+            if value.is_finite() {
+                value.max(0.0)
+            } else {
+                f64::NAN
+            }
+        })
         .collect();
     let losses: Vec<f64> = changes
         .iter()
-        .map(|value| if value.is_finite() { (-value).max(0.0) } else { f64::NAN })
+        .map(|value| {
+            if value.is_finite() {
+                (-value).max(0.0)
+            } else {
+                f64::NAN
+            }
+        })
         .collect();
     let up = rolling::rolling_sum(&gains, period)?;
     let down = rolling::rolling_sum(&losses, period)?;
@@ -106,7 +130,11 @@ pub fn cmo(input: &[f64], period: usize) -> Result<Vec<f64>, IndicatorError> {
         .map(|(&up, down)| {
             if up.is_finite() && down.is_finite() {
                 let total = up + down;
-                if total == 0.0 { 0.0 } else { 100.0 * (up - down) / total }
+                if total == 0.0 {
+                    0.0
+                } else {
+                    100.0 * (up - down) / total
+                }
             } else {
                 f64::NAN
             }
@@ -122,14 +150,26 @@ pub fn tsi(
 ) -> Result<Vec<f64>, IndicatorError> {
     let momentum = change(input);
     let absolute: Vec<f64> = momentum.iter().map(|value| value.abs()).collect();
-    let numerator = smoothing::ema(&smoothing::ema(&momentum, slow_period, false)?, fast_period, false)?;
-    let denominator = smoothing::ema(&smoothing::ema(&absolute, slow_period, false)?, fast_period, false)?;
+    let numerator = smoothing::ema(
+        &smoothing::ema(&momentum, slow_period, false)?,
+        fast_period,
+        false,
+    )?;
+    let denominator = smoothing::ema(
+        &smoothing::ema(&absolute, slow_period, false)?,
+        fast_period,
+        false,
+    )?;
     Ok(numerator
         .iter()
         .zip(denominator)
         .map(|(&numerator, denominator)| {
             if numerator.is_finite() && denominator.is_finite() {
-                if denominator == 0.0 { 0.0 } else { 100.0 * numerator / denominator }
+                if denominator == 0.0 {
+                    0.0
+                } else {
+                    100.0 * numerator / denominator
+                }
             } else {
                 f64::NAN
             }
@@ -170,16 +210,34 @@ pub fn smi(
     let range: Vec<f64> = highest
         .iter()
         .zip(lowest)
-        .map(|(&high, low)| if high.is_finite() && low.is_finite() { high - low } else { f64::NAN })
+        .map(|(&high, low)| {
+            if high.is_finite() && low.is_finite() {
+                high - low
+            } else {
+                f64::NAN
+            }
+        })
         .collect();
-    let numerator = smoothing::ema(&smoothing::ema(&distance, smooth_period, false)?, smooth_period, false)?;
-    let denominator = smoothing::ema(&smoothing::ema(&range, smooth_period, false)?, smooth_period, false)?;
+    let numerator = smoothing::ema(
+        &smoothing::ema(&distance, smooth_period, false)?,
+        smooth_period,
+        false,
+    )?;
+    let denominator = smoothing::ema(
+        &smoothing::ema(&range, smooth_period, false)?,
+        smooth_period,
+        false,
+    )?;
     let line: Vec<f64> = numerator
         .iter()
         .zip(denominator)
         .map(|(&numerator, denominator)| {
             if numerator.is_finite() && denominator.is_finite() {
-                if denominator == 0.0 { 0.0 } else { 200.0 * numerator / denominator }
+                if denominator == 0.0 {
+                    0.0
+                } else {
+                    200.0 * numerator / denominator
+                }
             } else {
                 f64::NAN
             }
@@ -203,7 +261,11 @@ pub fn wpr(
         .map(|index| {
             let range = highest[index] - lowest[index];
             if highest[index].is_finite() && close[index].is_finite() {
-                if range == 0.0 { 0.0 } else { -100.0 * (highest[index] - close[index]) / range }
+                if range == 0.0 {
+                    0.0
+                } else {
+                    -100.0 * (highest[index] - close[index]) / range
+                }
             } else {
                 f64::NAN
             }
@@ -299,9 +361,7 @@ pub fn cti(input: &[f64], period: usize) -> Result<Vec<f64>, IndicatorError> {
     }
     let mut output = vec![f64::NAN; input.len()];
     let x_mean = (period as f64 + 1.0) / 2.0;
-    let x_variance: f64 = (1..=period)
-        .map(|x| (x as f64 - x_mean).powi(2))
-        .sum();
+    let x_variance: f64 = (1..=period).map(|x| (x as f64 - x_mean).powi(2)).sum();
     for index in period - 1..input.len() {
         let window = &input[index + 1 - period..=index];
         if window.iter().all(|value| value.is_finite()) {
@@ -339,12 +399,23 @@ pub fn rvi(
     close: &[f64],
     period: usize,
 ) -> Result<RviOutput, IndicatorError> {
-    validation::same_length(open.len(), &[("high", high.len()), ("low", low.len()), ("close", close.len())])?;
+    validation::same_length(
+        open.len(),
+        &[
+            ("high", high.len()),
+            ("low", low.len()),
+            ("close", close.len()),
+        ],
+    )?;
     let mut numerator = vec![f64::NAN; open.len()];
     let mut denominator = vec![f64::NAN; open.len()];
     for index in 3..open.len() {
         let rows = index - 3..=index;
-        if rows.clone().all(|i| [open[i], high[i], low[i], close[i]].iter().all(|v| v.is_finite())) {
+        if rows.clone().all(|i| {
+            [open[i], high[i], low[i], close[i]]
+                .iter()
+                .all(|v| v.is_finite())
+        }) {
             numerator[index] = ((close[index] - open[index])
                 + 2.0 * (close[index - 1] - open[index - 1])
                 + 2.0 * (close[index - 2] - open[index - 2])
@@ -372,8 +443,13 @@ pub fn rvi(
         .collect();
     let mut signal = vec![f64::NAN; open.len()];
     for index in 3..open.len() {
-        if line[index - 3..=index].iter().all(|value| value.is_finite()) {
-            signal[index] = (line[index] + 2.0 * line[index - 1] + 2.0 * line[index - 2] + line[index - 3]) / 6.0;
+        if line[index - 3..=index]
+            .iter()
+            .all(|value| value.is_finite())
+        {
+            signal[index] =
+                (line[index] + 2.0 * line[index - 1] + 2.0 * line[index - 2] + line[index - 3])
+                    / 6.0;
         }
     }
     Ok(RviOutput { line, signal })
@@ -396,7 +472,11 @@ pub fn dvi(
         .zip(long)
         .map(|(&short, long)| {
             if short.is_finite() && long.is_finite() {
-                if long == 0.0 { 0.0 } else { 100.0 * short / long }
+                if long == 0.0 {
+                    0.0
+                } else {
+                    100.0 * short / long
+                }
             } else {
                 f64::NAN
             }
@@ -431,7 +511,11 @@ pub fn stoch(
         .map(|index| {
             let range = highest[index] - lowest[index];
             if close[index].is_finite() && highest[index].is_finite() {
-                if range == 0.0 { 50.0 } else { 100.0 * (close[index] - lowest[index]) / range }
+                if range == 0.0 {
+                    50.0
+                } else {
+                    100.0 * (close[index] - lowest[index]) / range
+                }
             } else {
                 f64::NAN
             }
@@ -439,7 +523,11 @@ pub fn stoch(
         .collect();
     let fast_d = rolling::rolling_mean(&fast_k, d_period)?;
     let slow_d = rolling::rolling_mean(&fast_d, slow_period)?;
-    Ok(StochasticOutput { fast_k, fast_d, slow_d })
+    Ok(StochasticOutput {
+        fast_k,
+        fast_d,
+        slow_d,
+    })
 }
 
 /// KDJ oscillator output.
@@ -483,7 +571,13 @@ pub fn kdj(
     let j = k
         .iter()
         .zip(&d)
-        .map(|(&k, &d)| if k.is_finite() && d.is_finite() { 3.0 * k - 2.0 * d } else { f64::NAN })
+        .map(|(&k, &d)| {
+            if k.is_finite() && d.is_finite() {
+                3.0 * k - 2.0 * d
+            } else {
+                f64::NAN
+            }
+        })
         .collect();
     Ok(KdjOutput { k, d, j })
 }

@@ -27,9 +27,15 @@ pub fn adx(
     let mut minus_movement = vec![f64::NAN; length];
 
     for index in 1..length {
-        if [high[index], low[index], close[index - 1], high[index - 1], low[index - 1]]
-            .iter()
-            .all(|value| value.is_finite())
+        if [
+            high[index],
+            low[index],
+            close[index - 1],
+            high[index - 1],
+            low[index - 1],
+        ]
+        .iter()
+        .all(|value| value.is_finite())
         {
             true_range[index] = (high[index] - low[index])
                 .max((high[index] - close[index - 1]).abs())
@@ -65,4 +71,3 @@ pub fn adx(
         minus_di,
     })
 }
-

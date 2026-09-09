@@ -48,11 +48,7 @@ pub struct TdiOutput {
 }
 
 /// Calculate the Trend Detection Index from price momentum.
-pub fn tdi(
-    input: &[f64],
-    period: usize,
-    long_period: usize,
-) -> Result<TdiOutput, IndicatorError> {
+pub fn tdi(input: &[f64], period: usize, long_period: usize) -> Result<TdiOutput, IndicatorError> {
     validation::period(period)?;
     validation::period(long_period)?;
     if long_period < period {
@@ -198,7 +194,10 @@ pub fn kst(input: &[f64], config: KstConfig) -> Result<KstOutput, IndicatorError
     }
     let mut line = vec![f64::NAN; input.len()];
     for index in 0..input.len() {
-        if components.iter().all(|component| component[index].is_finite()) {
+        if components
+            .iter()
+            .all(|component| component[index].is_finite())
+        {
             line[index] = components
                 .iter()
                 .zip(config.weights)

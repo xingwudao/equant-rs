@@ -21,9 +21,7 @@ pub(crate) fn rolling_regression(
         return Err(IndicatorError::InvalidParameter("regression period"));
     }
     let x_mean = (period as f64 + 1.0) / 2.0;
-    let sxx: f64 = (1..=period)
-        .map(|x| (x as f64 - x_mean).powi(2))
-        .sum();
+    let sxx: f64 = (1..=period).map(|x| (x as f64 - x_mean).powi(2)).sum();
 
     for index in period - 1..input.len() {
         let window = &input[index + 1 - period..=index];

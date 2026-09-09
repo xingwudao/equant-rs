@@ -37,4 +37,3 @@ impl fmt::Display for IndicatorError {
 }
 
 impl std::error::Error for IndicatorError {}
-

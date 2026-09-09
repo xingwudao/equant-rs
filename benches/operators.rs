@@ -7,7 +7,9 @@ fn prices(length: usize) -> (Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>) {
         .collect();
     let high = close.iter().map(|value| value + 1.0).collect();
     let low = close.iter().map(|value| value - 1.0).collect();
-    let volume = (0..length).map(|index| 1_000.0 + index as f64 % 100.0).collect();
+    let volume = (0..length)
+        .map(|index| 1_000.0 + index as f64 % 100.0)
+        .collect();
     (high, low, close, volume)
 }
 
@@ -22,10 +24,21 @@ fn operator_benchmarks(criterion: &mut Criterion) {
             bencher.iter(|| momentum::rsi(black_box(&close), 14).unwrap())
         });
         group.bench_with_input(BenchmarkId::new("atr", length), &length, |bencher, _| {
-            bencher.iter(|| volatility::atr(black_box(&high), black_box(&low), black_box(&close), 14).unwrap())
+            bencher.iter(|| {
+                volatility::atr(black_box(&high), black_box(&low), black_box(&close), 14).unwrap()
+            })
         });
         group.bench_with_input(BenchmarkId::new("mfi", length), &length, |bencher, _| {
-            bencher.iter(|| volume::mfi(black_box(&high), black_box(&low), black_box(&close), black_box(&volume), 14).unwrap())
+            bencher.iter(|| {
+                volume::mfi(
+                    black_box(&high),
+                    black_box(&low),
+                    black_box(&close),
+                    black_box(&volume),
+                    14,
+                )
+                .unwrap()
+            })
         });
     }
     group.finish();

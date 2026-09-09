@@ -19,4 +19,3 @@ fn main() -> Result<(), equant::IndicatorError> {
     );
     Ok(())
 }
-

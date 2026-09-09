@@ -63,11 +63,7 @@ pub struct AroonOutput {
 }
 
 /// Calculate Aroon using the most recent extreme when a window contains ties.
-pub fn aroon(
-    high: &[f64],
-    low: &[f64],
-    period: usize,
-) -> Result<AroonOutput, IndicatorError> {
+pub fn aroon(high: &[f64], low: &[f64], period: usize) -> Result<AroonOutput, IndicatorError> {
     validation::same_length(high.len(), &[("low", low.len())])?;
     if period < 2 {
         return Err(IndicatorError::InvalidParameter("aroon period"));
@@ -101,9 +97,19 @@ pub fn aroon(
     let oscillator = up
         .iter()
         .zip(&down)
-        .map(|(&up, &down)| if up.is_finite() && down.is_finite() { up - down } else { f64::NAN })
+        .map(|(&up, &down)| {
+            if up.is_finite() && down.is_finite() {
+                up - down
+            } else {
+                f64::NAN
+            }
+        })
         .collect();
-    Ok(AroonOutput { up, down, oscillator })
+    Ok(AroonOutput {
+        up,
+        down,
+        oscillator,
+    })
 }
 
 /// Tom DeMark Setup counts.
@@ -146,11 +152,7 @@ pub fn td_setup(close: &[f64]) -> Result<Vec<i32>, IndicatorError> {
 /// Buy countdown bars require close at or below the low two bars earlier;
 /// sell countdown bars require close at or above the high two bars earlier.
 /// Counts need not occur on consecutive bars and stop at thirteen.
-pub fn td_countdown(
-    high: &[f64],
-    low: &[f64],
-    close: &[f64],
-) -> Result<Vec<i32>, IndicatorError> {
+pub fn td_countdown(high: &[f64], low: &[f64], close: &[f64]) -> Result<Vec<i32>, IndicatorError> {
     validation::same_length(high.len(), &[("low", low.len()), ("close", close.len())])?;
     let setup = td_setup(close)?;
     let mut output = vec![0; close.len()];

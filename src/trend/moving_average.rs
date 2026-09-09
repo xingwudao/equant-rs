@@ -29,7 +29,10 @@ pub fn hma(input: &[f64], period: usize) -> Result<Vec<f64>, IndicatorError> {
     let half = wma(input, (period / 2).max(1))?;
     let full = wma(input, period)?;
     let difference = zip_map(&half, &full, |a, b| 2.0 * a - b);
-    wma(&difference, (period as f64).sqrt().round().max(1.0) as usize)
+    wma(
+        &difference,
+        (period as f64).sqrt().round().max(1.0) as usize,
+    )
 }
 
 /// Zero-lag EMA using the de-lagged input `x[t] + (x[t] - x[t-lag])`.
@@ -84,11 +87,7 @@ pub fn alma(
 }
 
 /// Elastic volume-weighted moving average.
-pub fn evwma(
-    price: &[f64],
-    volume: &[f64],
-    period: usize,
-) -> Result<Vec<f64>, IndicatorError> {
+pub fn evwma(price: &[f64], volume: &[f64], period: usize) -> Result<Vec<f64>, IndicatorError> {
     validation::period(period)?;
     validation::same_length(price.len(), &[("volume", volume.len())])?;
     let volume_sum = rolling::rolling_sum(volume, period)?;
@@ -110,11 +109,7 @@ pub fn evwma(
 }
 
 /// Trailing volume-weighted moving average.
-pub fn vwma(
-    price: &[f64],
-    volume: &[f64],
-    period: usize,
-) -> Result<Vec<f64>, IndicatorError> {
+pub fn vwma(price: &[f64], volume: &[f64], period: usize) -> Result<Vec<f64>, IndicatorError> {
     validation::same_length(price.len(), &[("volume", volume.len())])?;
     let products: Vec<f64> = price
         .iter()
@@ -182,4 +177,3 @@ pub(crate) fn zip_map(
         })
         .collect()
 }
-

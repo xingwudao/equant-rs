@@ -6,7 +6,9 @@ fn equal_or_nan(left: f64, right: f64) -> bool {
 }
 
 fn prefix_matches(left: &[f64], right: &[f64]) -> bool {
-    left.iter().zip(right).all(|(&left, &right)| equal_or_nan(left, right))
+    left.iter()
+        .zip(right)
+        .all(|(&left, &right)| equal_or_nan(left, right))
 }
 
 proptest! {
@@ -46,7 +48,9 @@ proptest! {
 
 #[test]
 fn scale_free_indicators_are_scale_invariant() {
-    let close: Vec<f64> = (0..100).map(|i| 50.0 + i as f64 + (i as f64).sin()).collect();
+    let close: Vec<f64> = (0..100)
+        .map(|i| 50.0 + i as f64 + (i as f64).sin())
+        .collect();
     let high: Vec<f64> = close.iter().map(|value| value + 2.0).collect();
     let low: Vec<f64> = close.iter().map(|value| value - 2.0).collect();
     let volume: Vec<f64> = (0..100).map(|i| 1_000.0 + i as f64).collect();
@@ -57,7 +61,8 @@ fn scale_free_indicators_are_scale_invariant() {
     assert!(prefix_matches(&rsi, &scaled_rsi));
 
     let cmf = volume::cmf(&high, &low, &close, &volume, 20).unwrap();
-    let scaled_cmf = volume::cmf(&scaled(&high), &scaled(&low), &scaled(&close), &volume, 20).unwrap();
+    let scaled_cmf =
+        volume::cmf(&scaled(&high), &scaled(&low), &scaled(&close), &volume, 20).unwrap();
     assert!(prefix_matches(&cmf, &scaled_cmf));
 }
 
@@ -69,6 +74,8 @@ fn volatility_and_oscillator_ranges_hold() {
     let atr = volatility::atr(&high, &low, &close, 14).unwrap();
     assert!(atr.iter().filter(|v| v.is_finite()).all(|v| *v >= 0.0));
     let rsi = momentum::rsi(&close, 14).unwrap();
-    assert!(rsi.iter().filter(|v| v.is_finite()).all(|v| (0.0..=100.0).contains(v)));
+    assert!(rsi
+        .iter()
+        .filter(|v| v.is_finite())
+        .all(|v| (0.0..=100.0).contains(v)));
 }
-

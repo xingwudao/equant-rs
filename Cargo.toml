@@ -17,9 +17,14 @@ path = "src/lib.rs"
 
 [dev-dependencies]
 approx = "0.5"
-proptest = "1.6"
+proptest = "=1.5.0"
 criterion = "0.5"
 serde_json = "1"
+# Criterion accepts newer Clap releases whose manifests require Edition 2024.
+# Pin the development CLI parser so the declared Rust 1.81 MSRV can parse it.
+clap = "=4.5.48"
+# Proptest accepts newer Tempfile releases with the same MSRV issue.
+tempfile = "=3.12.0"
 
 [[bench]]
 name = "operators"

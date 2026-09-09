@@ -83,11 +83,7 @@ pub fn rolling_max(input: &[f64], period: usize) -> Result<Vec<f64>, IndicatorEr
     rolling_extreme(input, period, |old, new| old >= new)
 }
 
-pub fn rolling_std(
-    input: &[f64],
-    period: usize,
-    sample: bool,
-) -> Result<Vec<f64>, IndicatorError> {
+pub fn rolling_std(input: &[f64], period: usize, sample: bool) -> Result<Vec<f64>, IndicatorError> {
     validation::period(period)?;
     if sample && period < 2 {
         return Err(IndicatorError::InvalidParameter("sample period"));
@@ -137,4 +133,3 @@ pub(crate) fn rolling_wma(input: &[f64], period: usize) -> Result<Vec<f64>, Indi
     }
     Ok(output)
 }
-
