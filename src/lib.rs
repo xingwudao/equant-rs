@@ -19,6 +19,18 @@ pub mod transform;
 
 pub use error::IndicatorError;
 
+/// Stable names of the 60 batch operators included in version 0.1.
+pub const OPERATOR_NAMES: [&str; 60] = [
+    "sma", "ema", "dema", "wma", "hma", "zlema", "alma", "evwma", "vwma",
+    "macd", "adx", "gmma", "tdi", "trix", "dpo", "vhf", "kst", "po", "rsi",
+    "cci", "cmo", "tsi", "smi", "wpr", "ultimate_oscillator", "roc", "momentum",
+    "cti", "rvi", "dvi", "stoch", "kdj", "atr", "tr", "bollinger", "keltner",
+    "donchian", "pbands", "volatility", "obv", "cmf", "vwap", "mfi", "emv",
+    "clv", "chaikin_ad", "chaikin_volatility", "williams_ad", "zigzag", "pivots",
+    "sar", "snr", "growth", "adj_ratios", "roll_sfm", "aroon", "td_setup",
+    "td_countdown", "na_check", "lags",
+];
+
 /// Internal numerical primitives exposed only to support conformance testing.
 #[doc(hidden)]
 pub mod testing {
