@@ -208,6 +208,14 @@ pub enum VolatilityEstimator {
 }
 
 /// Calculate annualized historical volatility.
+///
+/// Close-to-close uses sample standard deviation of log returns. Parkinson,
+/// Garman-Klass, and Rogers-Satchell average their per-bar variance estimates.
+/// Yang-Zhang combines sample variances of overnight and open-to-close returns
+/// with mean Rogers-Satchell variance using
+/// `k = 0.34 / (1.34 + (period + 1) / (period - 1))` and requires a period of
+/// at least two returns. Every estimator only treats its formula inputs as
+/// required observations.
 pub fn volatility(
     open: &[f64],
     high: &[f64],
@@ -227,37 +235,45 @@ pub fn volatility(
     )?;
     validation::period(period)?;
     validation::positive(periods_per_year, "periods_per_year")?;
+    if matches!(estimator, VolatilityEstimator::YangZhang) && period < 2 {
+        return Err(IndicatorError::InvalidParameter("yang_zhang period"));
+    }
+
+    if matches!(estimator, VolatilityEstimator::YangZhang) {
+        return yang_zhang(open, high, low, close, period, periods_per_year);
+    }
+
     let mut per_bar = vec![f64::NAN; close.len()];
-    for index in 1..close.len() {
-        let values = [
-            open[index],
-            high[index],
-            low[index],
-            close[index],
-            close[index - 1],
-        ];
-        if !values.iter().all(|value| value.is_finite() && *value > 0.0) {
-            continue;
-        }
-        let high_low = (high[index] / low[index]).ln();
-        let close_open = (close[index] / open[index]).ln();
+    for index in 0..close.len() {
         per_bar[index] = match estimator {
-            VolatilityEstimator::CloseToClose => (close[index] / close[index - 1]).ln(),
-            VolatilityEstimator::Parkinson => high_low.powi(2) / (4.0 * 2.0_f64.ln()),
+            VolatilityEstimator::CloseToClose => {
+                if index == 0 || !positive_prices(&[close[index], close[index - 1]]) {
+                    continue;
+                }
+                (close[index] / close[index - 1]).ln()
+            }
+            VolatilityEstimator::Parkinson => {
+                if !positive_prices(&[high[index], low[index]]) {
+                    continue;
+                }
+                (high[index] / low[index]).ln().powi(2) / (4.0 * 2.0_f64.ln())
+            }
             VolatilityEstimator::GarmanKlass => {
+                if !positive_prices(&[open[index], high[index], low[index], close[index]]) {
+                    continue;
+                }
+                let high_low = (high[index] / low[index]).ln();
+                let close_open = (close[index] / open[index]).ln();
                 0.5 * high_low.powi(2) - (2.0 * 2.0_f64.ln() - 1.0) * close_open.powi(2)
             }
             VolatilityEstimator::RogersSatchell => {
+                if !positive_prices(&[open[index], high[index], low[index], close[index]]) {
+                    continue;
+                }
                 (high[index] / close[index]).ln() * (high[index] / open[index]).ln()
                     + (low[index] / close[index]).ln() * (low[index] / open[index]).ln()
             }
-            VolatilityEstimator::YangZhang => {
-                let overnight = (open[index] / close[index - 1]).ln();
-                let rogers_satchell = (high[index] / close[index]).ln()
-                    * (high[index] / open[index]).ln()
-                    + (low[index] / close[index]).ln() * (low[index] / open[index]).ln();
-                overnight.powi(2) + 0.34 * close_open.powi(2) + 0.66 * rogers_satchell
-            }
+            VolatilityEstimator::YangZhang => unreachable!("handled above"),
         };
     }
     let mut output = match estimator {
@@ -274,4 +290,58 @@ pub fn volatility(
         }
     }
     Ok(output)
+}
+
+fn positive_prices(values: &[f64]) -> bool {
+    values.iter().all(|value| value.is_finite() && *value > 0.0)
+}
+
+fn yang_zhang(
+    open: &[f64],
+    high: &[f64],
+    low: &[f64],
+    close: &[f64],
+    period: usize,
+    periods_per_year: f64,
+) -> Result<Vec<f64>, IndicatorError> {
+    let mut overnight = vec![f64::NAN; close.len()];
+    let mut intraday = vec![f64::NAN; close.len()];
+    let mut rogers_satchell = vec![f64::NAN; close.len()];
+    for index in 1..close.len() {
+        if !positive_prices(&[
+            open[index],
+            high[index],
+            low[index],
+            close[index],
+            close[index - 1],
+        ]) {
+            continue;
+        }
+        overnight[index] = (open[index] / close[index - 1]).ln();
+        intraday[index] = (close[index] / open[index]).ln();
+        rogers_satchell[index] = (high[index] / close[index]).ln()
+            * (high[index] / open[index]).ln()
+            + (low[index] / close[index]).ln() * (low[index] / open[index]).ln();
+    }
+
+    let overnight_std = rolling::rolling_std(&overnight, period, true)?;
+    let intraday_std = rolling::rolling_std(&intraday, period, true)?;
+    let rs_mean = rolling::rolling_mean(&rogers_satchell, period)?;
+    let period = period as f64;
+    let k = 0.34 / (1.34 + (period + 1.0) / (period - 1.0));
+    Ok((0..close.len())
+        .map(|index| {
+            if overnight_std[index].is_finite()
+                && intraday_std[index].is_finite()
+                && rs_mean[index].is_finite()
+            {
+                let variance = overnight_std[index].powi(2)
+                    + k * intraday_std[index].powi(2)
+                    + (1.0 - k) * rs_mean[index];
+                variance.max(0.0).sqrt() * periods_per_year.sqrt()
+            } else {
+                f64::NAN
+            }
+        })
+        .collect())
 }

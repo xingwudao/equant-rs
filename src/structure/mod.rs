@@ -155,62 +155,60 @@ pub fn sar(
     if high.len() < 2 {
         return Ok(output);
     }
-    let Some(start) = (0..high.len() - 1).find(|&i| {
-        [high[i], low[i], high[i + 1], low[i + 1]]
-            .iter()
-            .all(|value| value.is_finite())
-    }) else {
-        return Ok(output);
-    };
-    let mut long = (high[start + 1] + low[start + 1]) >= (high[start] + low[start]);
-    let mut point = if long { low[start] } else { high[start] };
-    let mut extreme = if long {
-        high[start + 1]
-    } else {
-        low[start + 1]
-    };
-    let mut factor = acceleration;
-    for index in start + 1..high.len() {
-        if !high[index].is_finite() || !low[index].is_finite() {
-            point = f64::NAN;
-            continue;
-        }
-        if !point.is_finite() {
-            point = if long { low[index] } else { high[index] };
-            extreme = if long { high[index] } else { low[index] };
-            factor = acceleration;
-        }
-        point += factor * (extreme - point);
-        if long {
-            point = point.min(low[index - 1]);
-            if index > start + 1 {
-                point = point.min(low[index - 2]);
-            }
-            if low[index] < point {
-                long = false;
-                point = extreme;
-                extreme = low[index];
-                factor = acceleration;
-            } else if high[index] > extreme {
-                extreme = high[index];
-                factor = (factor + acceleration).min(maximum);
-            }
+    let mut cursor = 0;
+    while cursor + 1 < high.len() {
+        let Some(relative_start) = (cursor..high.len() - 1).position(|i| {
+            [high[i], low[i], high[i + 1], low[i + 1]]
+                .iter()
+                .all(|value| value.is_finite())
+        }) else {
+            break;
+        };
+        let start = cursor + relative_start;
+        let mut long = (high[start + 1] + low[start + 1]) >= (high[start] + low[start]);
+        let mut point = if long { low[start] } else { high[start] };
+        let mut extreme = if long {
+            high[start + 1]
         } else {
-            point = point.max(high[index - 1]);
-            if index > start + 1 {
-                point = point.max(high[index - 2]);
+            low[start + 1]
+        };
+        let mut factor = acceleration;
+        let mut index = start + 1;
+        while index < high.len() && high[index].is_finite() && low[index].is_finite() {
+            point += factor * (extreme - point);
+            if long {
+                point = point.min(low[index - 1]);
+                if index > start + 1 {
+                    point = point.min(low[index - 2]);
+                }
+                if low[index] < point {
+                    long = false;
+                    point = extreme;
+                    extreme = low[index];
+                    factor = acceleration;
+                } else if high[index] > extreme {
+                    extreme = high[index];
+                    factor = (factor + acceleration).min(maximum);
+                }
+            } else {
+                point = point.max(high[index - 1]);
+                if index > start + 1 {
+                    point = point.max(high[index - 2]);
+                }
+                if high[index] > point {
+                    long = true;
+                    point = extreme;
+                    extreme = high[index];
+                    factor = acceleration;
+                } else if low[index] < extreme {
+                    extreme = low[index];
+                    factor = (factor + acceleration).min(maximum);
+                }
             }
-            if high[index] > point {
-                long = true;
-                point = extreme;
-                extreme = high[index];
-                factor = acceleration;
-            } else if low[index] < extreme {
-                extreme = low[index];
-                factor = (factor + acceleration).min(maximum);
-            }
+            output[index] = point;
+            index += 1;
         }
-        output[index] = point;
+        cursor = index.saturating_add(1);
     }
     Ok(output)
 }

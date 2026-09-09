@@ -1,3 +1,4 @@
+use approx::assert_relative_eq;
 use equant::testing::{ema, rolling_max, rolling_mean, rolling_min, rolling_std};
 use equant::IndicatorError;
 
@@ -25,6 +26,18 @@ fn rolling_extrema_track_the_current_window() {
 fn rolling_population_std_is_zero_for_constant_data() {
     let out = rolling_std(&[2.0; 6], 3, false).unwrap();
     assert!(out[2..].iter().all(|value| *value == 0.0));
+}
+
+#[test]
+fn rolling_std_preserves_small_variation_around_large_values() {
+    let out = rolling_std(
+        &[1.0e12 + 1.0, 1.0e12 + 2.0, 1.0e12 + 3.0, 1.0e12 + 4.0],
+        3,
+        false,
+    )
+    .unwrap();
+    assert_relative_eq!(out[2], (2.0_f64 / 3.0).sqrt(), epsilon = 1e-12);
+    assert_relative_eq!(out[3], (2.0_f64 / 3.0).sqrt(), epsilon = 1e-12);
 }
 
 #[test]

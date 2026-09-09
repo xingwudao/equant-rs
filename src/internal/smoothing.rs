@@ -1,6 +1,7 @@
 use crate::internal::validation;
 use crate::IndicatorError;
 
+/// SMA-seeded exponential average, optionally using Wilder's smoothing factor.
 pub fn ema(input: &[f64], period: usize, wilder: bool) -> Result<Vec<f64>, IndicatorError> {
     validation::period(period)?;
     let mut output = vec![f64::NAN; input.len()];

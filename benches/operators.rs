@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use equant::{momentum, trend, volatility, volume};
+use equant::{momentum, structure, transform, trend, volatility, volume};
 
 fn prices(length: usize) -> (Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>) {
     let close: Vec<f64> = (0..length)
@@ -19,6 +19,9 @@ fn operator_benchmarks(criterion: &mut Criterion) {
         let (high, low, close, volume) = prices(length);
         group.bench_with_input(BenchmarkId::new("sma", length), &length, |bencher, _| {
             bencher.iter(|| trend::sma(black_box(&close), 20).unwrap())
+        });
+        group.bench_with_input(BenchmarkId::new("wma", length), &length, |bencher, _| {
+            bencher.iter(|| trend::wma(black_box(&close), 20).unwrap())
         });
         group.bench_with_input(BenchmarkId::new("rsi", length), &length, |bencher, _| {
             bencher.iter(|| momentum::rsi(black_box(&close), 14).unwrap())
@@ -40,6 +43,17 @@ fn operator_benchmarks(criterion: &mut Criterion) {
                 .unwrap()
             })
         });
+        group.bench_with_input(BenchmarkId::new("sar", length), &length, |bencher, _| {
+            bencher.iter(|| structure::sar(black_box(&high), black_box(&low), 0.02, 0.2).unwrap())
+        });
+        group.bench_with_input(BenchmarkId::new("aroon", length), &length, |bencher, _| {
+            bencher.iter(|| transform::aroon(black_box(&high), black_box(&low), 20).unwrap())
+        });
+        group.bench_with_input(
+            BenchmarkId::new("roll_sfm", length),
+            &length,
+            |bencher, _| bencher.iter(|| transform::roll_sfm(black_box(&close), 20).unwrap()),
+        );
     }
     group.finish();
 }

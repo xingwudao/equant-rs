@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use crate::internal::{statistics, validation};
 use crate::IndicatorError;
 
@@ -65,33 +67,51 @@ pub struct AroonOutput {
 /// Calculate Aroon using the most recent extreme when a window contains ties.
 pub fn aroon(high: &[f64], low: &[f64], period: usize) -> Result<AroonOutput, IndicatorError> {
     validation::same_length(high.len(), &[("low", low.len())])?;
+    validation::period(period)?;
     if period < 2 {
         return Err(IndicatorError::InvalidParameter("aroon period"));
     }
     let mut up = vec![f64::NAN; high.len()];
     let mut down = vec![f64::NAN; high.len()];
-    for index in period - 1..high.len() {
-        let start = index + 1 - period;
-        let high_window = &high[start..=index];
-        let low_window = &low[start..=index];
-        if high_window.iter().all(|value| value.is_finite())
-            && low_window.iter().all(|value| value.is_finite())
+    let mut high_queue: VecDeque<usize> = VecDeque::new();
+    let mut low_queue: VecDeque<usize> = VecDeque::new();
+    let mut consecutive = 0usize;
+    for index in 0..high.len() {
+        if !high[index].is_finite() || !low[index].is_finite() {
+            high_queue.clear();
+            low_queue.clear();
+            consecutive = 0;
+            continue;
+        }
+        consecutive += 1;
+        while high_queue
+            .back()
+            .is_some_and(|&last| high[last] <= high[index])
         {
-            let high_offset = high_window
-                .iter()
-                .enumerate()
-                .max_by(|left, right| left.1.total_cmp(right.1).then(left.0.cmp(&right.0)))
-                .map(|(offset, _)| offset)
-                .expect("non-empty validated window");
-            let low_offset = low_window
-                .iter()
-                .enumerate()
-                .min_by(|left, right| left.1.total_cmp(right.1).then(right.0.cmp(&left.0)))
-                .map(|(offset, _)| offset)
-                .expect("non-empty validated window");
+            high_queue.pop_back();
+        }
+        while low_queue
+            .back()
+            .is_some_and(|&last| low[last] >= low[index])
+        {
+            low_queue.pop_back();
+        }
+        high_queue.push_back(index);
+        low_queue.push_back(index);
+        if index >= period {
+            let expired = index - period;
+            if high_queue.front() == Some(&expired) {
+                high_queue.pop_front();
+            }
+            if low_queue.front() == Some(&expired) {
+                low_queue.pop_front();
+            }
+        }
+        if consecutive >= period {
+            let start = index + 1 - period;
             let scale = 100.0 / (period - 1) as f64;
-            up[index] = high_offset as f64 * scale;
-            down[index] = low_offset as f64 * scale;
+            up[index] = (high_queue[0] - start) as f64 * scale;
+            down[index] = (low_queue[0] - start) as f64 * scale;
         }
     }
     let oscillator = up
@@ -151,7 +171,9 @@ pub fn td_setup(close: &[f64]) -> Result<Vec<i32>, IndicatorError> {
 ///
 /// Buy countdown bars require close at or below the low two bars earlier;
 /// sell countdown bars require close at or above the high two bars earlier.
-/// Counts need not occur on consecutive bars and stop at thirteen.
+/// Counts need not occur on consecutive bars and stop at thirteen. A countdown
+/// begins only when a setup first reaches positive or negative nine; this
+/// version does not implement optional TD recycle or cancellation variants.
 pub fn td_countdown(high: &[f64], low: &[f64], close: &[f64]) -> Result<Vec<i32>, IndicatorError> {
     validation::same_length(high.len(), &[("low", low.len()), ("close", close.len())])?;
     let setup = td_setup(close)?;
@@ -159,10 +181,10 @@ pub fn td_countdown(high: &[f64], low: &[f64], close: &[f64]) -> Result<Vec<i32>
     let mut direction = 0i8;
     let mut count = 0i32;
     for index in 0..close.len() {
-        if setup[index] >= 9 {
+        if setup[index] == 9 {
             direction = 1;
             count = 0;
-        } else if setup[index] <= -9 {
+        } else if setup[index] == -9 {
             direction = -1;
             count = 0;
         }

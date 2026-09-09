@@ -94,3 +94,21 @@ fn mismatched_volume_is_rejected() {
     let error = vwma(&[1.0, 2.0], &[10.0], 2).unwrap_err();
     assert!(error.to_string().contains("volume"));
 }
+
+#[test]
+fn evwma_rewarms_after_missing_price() {
+    let price = [1.0, 2.0, 3.0, f64::NAN, 5.0, 6.0, 7.0];
+    let out = evwma(&price, &[1.0; 7], 3).unwrap();
+    assert!(out[3..6].iter().all(|value| value.is_nan()));
+    assert!(out[6].is_finite());
+
+    let volume = [1.0, 1.0, 1.0, f64::NAN, 1.0, 1.0, 1.0];
+    let out = evwma(&[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0], &volume, 3).unwrap();
+    assert!(out[3..6].iter().all(|value| value.is_nan()));
+    assert!(out[6].is_finite());
+}
+
+#[test]
+fn zero_period_wins_over_relative_period_validation() {
+    assert_eq!(po(&[1.0], 0, 0), Err(equant::IndicatorError::InvalidPeriod));
+}

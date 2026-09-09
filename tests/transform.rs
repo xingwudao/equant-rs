@@ -1,6 +1,7 @@
 use equant::transform::{
     adj_ratios, aroon, growth, lags, na_check, roll_sfm, td_countdown, td_setup,
 };
+use equant::IndicatorError;
 
 #[test]
 fn missing_mask_and_lag_have_domain_types() {
@@ -43,4 +44,18 @@ fn linear_series_has_unit_regression_slope_and_fit() {
     let output = roll_sfm(&values, 10).unwrap();
     assert!((output.slope[19] - 1.0).abs() < 1e-12);
     assert!((output.r_squared[19] - 1.0).abs() < 1e-12);
+}
+
+#[test]
+fn td_countdown_reaches_thirteen_in_a_qualifying_decline() {
+    let close: Vec<f64> = (0..30).map(|index| 100.0 - index as f64).collect();
+    let high: Vec<f64> = close.iter().map(|value| value + 0.25).collect();
+    let low: Vec<f64> = close.iter().map(|value| value - 0.25).collect();
+    let out = td_countdown(&high, &low, &close).unwrap();
+    assert!(out.contains(&13));
+}
+
+#[test]
+fn aroon_zero_period_uses_the_common_period_error() {
+    assert_eq!(aroon(&[1.0], &[1.0], 0), Err(IndicatorError::InvalidPeriod));
 }

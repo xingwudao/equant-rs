@@ -20,35 +20,55 @@ pub(crate) fn rolling_regression(
     if period < 2 {
         return Err(IndicatorError::InvalidParameter("regression period"));
     }
-    let x_mean = (period as f64 + 1.0) / 2.0;
-    let sxx: f64 = (1..=period).map(|x| (x as f64 - x_mean).powi(2)).sum();
+    if period > input.len() {
+        return Ok(output);
+    }
+    let period_f64 = period as f64;
+    let x_mean = (period_f64 + 1.0) / 2.0;
+    let sxx = period_f64 * (period_f64 * period_f64 - 1.0) / 12.0;
+    let mut origin = 0.0;
+    let mut sum = 0.0;
+    let mut sum_squared = 0.0;
+    let mut weighted = 0.0;
+    let mut consecutive = 0usize;
 
-    for index in period - 1..input.len() {
-        let window = &input[index + 1 - period..=index];
-        if !window.iter().all(|value| value.is_finite()) {
+    for (index, &value) in input.iter().enumerate() {
+        if !value.is_finite() {
+            consecutive = 0;
+            sum = 0.0;
+            sum_squared = 0.0;
+            weighted = 0.0;
             continue;
         }
-        let y_mean = window.iter().sum::<f64>() / period as f64;
-        let sxy: f64 = window
-            .iter()
-            .enumerate()
-            .map(|(x, y)| (x as f64 + 1.0 - x_mean) * (y - y_mean))
-            .sum();
+        if consecutive == 0 {
+            origin = value;
+        }
+        let shifted = value - origin;
+        if consecutive < period {
+            consecutive += 1;
+            sum += shifted;
+            sum_squared += shifted * shifted;
+            weighted += consecutive as f64 * shifted;
+            if consecutive < period {
+                continue;
+            }
+        } else {
+            let old = input[index - period] - origin;
+            weighted = weighted - sum + period_f64 * shifted;
+            sum += shifted - old;
+            sum_squared += shifted * shifted - old * old;
+        }
+        let y_mean = origin + sum / period_f64;
+        let sxy = weighted - x_mean * sum;
         let slope = sxy / sxx;
         let intercept = y_mean - slope * x_mean;
-        let ss_total: f64 = window.iter().map(|y| (y - y_mean).powi(2)).sum();
-        let ss_residual: f64 = window
-            .iter()
-            .enumerate()
-            .map(|(x, y)| y - (intercept + slope * (x as f64 + 1.0)))
-            .map(|error| error * error)
-            .sum();
+        let ss_total = (sum_squared - sum * sum / period_f64).max(0.0);
         output.intercept[index] = intercept;
         output.slope[index] = slope;
         output.r_squared[index] = if ss_total == 0.0 {
             1.0
         } else {
-            (1.0 - ss_residual / ss_total).clamp(0.0, 1.0)
+            (sxy * sxy / (sxx * ss_total)).clamp(0.0, 1.0)
         };
     }
     Ok(output)

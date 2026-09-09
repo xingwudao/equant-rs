@@ -21,4 +21,3 @@ cargo clippy --all-targets -- -D warnings
 
 Performance changes must include a Criterion comparison and must not trade
 away documented numerical semantics.
-

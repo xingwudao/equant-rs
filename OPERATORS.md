@@ -4,6 +4,10 @@ All continuous results are equal-length `f64` arrays. `NaN` marks warmup or a
 window invalidated by non-finite input. Unless marked otherwise, an operator is
 causal and uses only current and earlier observations.
 
+Trailing sums, extrema, WMA, Aroon, and rolling time regression use linear-time
+single-pass algorithms. Recursive operators discard their state after a
+required non-finite row and complete their documented warmup again.
+
 ## Trend
 
 - `sma`: close; period; simple trailing mean; warmup `period - 1`.
@@ -50,7 +54,9 @@ causal and uses only current and earlier observations.
 - `keltner`: high, low, close; EMA, ATR, and multiplier parameters.
 - `donchian`: high and low; period; upper, lower, and middle channel.
 - `pbands`: close; period and deviation multiple; percentage bands.
-- `volatility`: OHLC; period, annualization, estimator; annualized result.
+- `volatility`: OHLC; period, annualization, estimator; annualized result. The
+  Yang-Zhang variant uses window sample variances and its period-dependent
+  weight; estimators ignore OHLC fields not required by their formula.
 
 `volatility` supports Close-to-Close, Parkinson, Garman-Klass,
 Rogers-Satchell, and Yang-Zhang estimators.
@@ -84,7 +90,7 @@ future data arrives. The remaining structure operators are causal.
 - `roll_sfm`: input; period; rolling intercept, time slope, and R-squared.
 - `aroon`: high and low; period; up, down, and oscillator values.
 - `td_setup`: close; signed DeMark setup counts returned as integers.
-- `td_countdown`: high, low, close; signed non-consecutive countdown integers.
+- `td_countdown`: high, low, close; signed non-consecutive countdown integers;
+  begins when setup first reaches 9 and omits optional recycle/cancel variants.
 - `na_check`: input; Boolean mask for NaN and infinity.
 - `lags`: input; period; backward shift with NaN padding.
-

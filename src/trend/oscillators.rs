@@ -215,6 +215,8 @@ pub fn po(
     fast_period: usize,
     slow_period: usize,
 ) -> Result<Vec<f64>, IndicatorError> {
+    validation::period(fast_period)?;
+    validation::period(slow_period)?;
     if fast_period >= slow_period {
         return Err(IndicatorError::InvalidParameter("fast_period"));
     }

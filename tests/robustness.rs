@@ -1,4 +1,4 @@
-use equant::{momentum, structure, trend, volatility, volume, IndicatorError};
+use equant::{momentum, structure, transform, trend, volatility, volume, IndicatorError};
 use proptest::prelude::*;
 
 #[test]
@@ -28,6 +28,46 @@ fn non_finite_input_never_panics() {
     assert!(trend::sma(&values, 2).is_ok());
     assert!(trend::ema(&values, 2).is_ok());
     assert!(momentum::rsi(&values, 2).is_ok());
+}
+
+#[test]
+fn oversized_periods_return_aligned_missing_outputs_without_large_allocations() {
+    let input = [1.0, 2.0, 3.0];
+    assert!(trend::wma(&input, usize::MAX)
+        .unwrap()
+        .iter()
+        .all(|value| value.is_nan()));
+    assert!(trend::alma(&input, usize::MAX, 0.85, 6.0)
+        .unwrap()
+        .iter()
+        .all(|value| value.is_nan()));
+    assert!(transform::roll_sfm(&input, usize::MAX)
+        .unwrap()
+        .slope
+        .iter()
+        .all(|value| value.is_nan()));
+    assert!(momentum::cti(&input, usize::MAX)
+        .unwrap()
+        .iter()
+        .all(|value| value.is_nan()));
+}
+
+#[test]
+fn zero_period_errors_are_consistent_across_multi_period_operators() {
+    let values = [1.0, 2.0];
+    assert_eq!(
+        trend::macd(&values, 0, 0, 0),
+        Err(IndicatorError::InvalidPeriod)
+    );
+    assert_eq!(trend::po(&values, 0, 0), Err(IndicatorError::InvalidPeriod));
+    assert_eq!(
+        momentum::ultimate_oscillator(&values, &values, &values, 0, 0, 0),
+        Err(IndicatorError::InvalidPeriod)
+    );
+    assert_eq!(
+        momentum::dvi(&values, 0, 0),
+        Err(IndicatorError::InvalidPeriod)
+    );
 }
 
 proptest! {

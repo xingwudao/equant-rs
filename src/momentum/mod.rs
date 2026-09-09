@@ -283,6 +283,9 @@ pub fn ultimate_oscillator(
     long_period: usize,
 ) -> Result<Vec<f64>, IndicatorError> {
     require_ohlc(high, low, close)?;
+    validation::period(short_period)?;
+    validation::period(medium_period)?;
+    validation::period(long_period)?;
     if !(short_period < medium_period && medium_period < long_period) {
         return Err(IndicatorError::InvalidParameter("oscillator periods"));
     }
@@ -360,6 +363,9 @@ pub fn cti(input: &[f64], period: usize) -> Result<Vec<f64>, IndicatorError> {
         return Err(IndicatorError::InvalidParameter("cti period"));
     }
     let mut output = vec![f64::NAN; input.len()];
+    if period > input.len() {
+        return Ok(output);
+    }
     let x_mean = (period as f64 + 1.0) / 2.0;
     let x_variance: f64 = (1..=period).map(|x| (x as f64 - x_mean).powi(2)).sum();
     for index in period - 1..input.len() {
@@ -461,6 +467,8 @@ pub fn dvi(
     long_period: usize,
     short_period: usize,
 ) -> Result<Vec<f64>, IndicatorError> {
+    validation::period(long_period)?;
+    validation::period(short_period)?;
     if short_period >= long_period {
         return Err(IndicatorError::InvalidParameter("short_period"));
     }

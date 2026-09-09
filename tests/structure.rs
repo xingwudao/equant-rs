@@ -40,3 +40,13 @@ fn rolling_support_never_exceeds_resistance() {
         }
     }
 }
+
+#[test]
+fn sar_reinitializes_after_missing_rows() {
+    let high = [2.0, 3.0, 4.0, f64::NAN, 6.0, 7.0];
+    let low = [1.0, 2.0, 3.0, f64::NAN, 5.0, 6.0];
+    let out = sar(&high, &low, 0.02, 0.2).unwrap();
+    assert!(out[3].is_nan());
+    assert!(out[4].is_nan());
+    assert!(out[5].is_finite());
+}

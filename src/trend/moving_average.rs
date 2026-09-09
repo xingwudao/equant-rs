@@ -65,13 +65,16 @@ pub fn alma(
         return Err(IndicatorError::InvalidParameter("offset"));
     }
     validation::positive(sigma, "sigma")?;
+    let mut output = vec![f64::NAN; input.len()];
+    if period > input.len() {
+        return Ok(output);
+    }
     let center = offset * (period - 1) as f64;
     let width = period as f64 / sigma;
     let weights: Vec<f64> = (0..period)
         .map(|index| (-((index as f64 - center).powi(2)) / (2.0 * width * width)).exp())
         .collect();
     let normalizer: f64 = weights.iter().sum();
-    let mut output = vec![f64::NAN; input.len()];
     for index in period - 1..input.len() {
         let window = &input[index + 1 - period..=index];
         if window.iter().all(|value| value.is_finite()) {
@@ -92,12 +95,17 @@ pub fn evwma(price: &[f64], volume: &[f64], period: usize) -> Result<Vec<f64>, I
     validation::same_length(price.len(), &[("volume", volume.len())])?;
     let volume_sum = rolling::rolling_sum(volume, period)?;
     let mut output = vec![f64::NAN; price.len()];
-    for index in period - 1..price.len() {
-        if !price[index].is_finite() || !volume[index].is_finite() || !volume_sum[index].is_finite()
-        {
+    let mut consecutive = 0usize;
+    for index in 0..price.len() {
+        if !price[index].is_finite() || !volume[index].is_finite() {
+            consecutive = 0;
             continue;
         }
-        if index == period - 1 || !output[index - 1].is_finite() {
+        consecutive += 1;
+        if consecutive < period || !volume_sum[index].is_finite() {
+            continue;
+        }
+        if index == 0 || !output[index - 1].is_finite() {
             output[index] = price[index];
         } else if volume_sum[index] != 0.0 {
             output[index] = ((volume_sum[index] - volume[index]) * output[index - 1]

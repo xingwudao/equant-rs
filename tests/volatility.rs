@@ -1,6 +1,7 @@
 use equant::volatility::{
     atr, bollinger, donchian, keltner, pbands, tr, volatility, VolatilityEstimator,
 };
+use equant::IndicatorError;
 
 fn ohlc(length: usize) -> (Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>) {
     let close: Vec<f64> = (0..length)
@@ -65,4 +66,50 @@ fn channel_outputs_are_ordered() {
             assert!(channel.middle[index] >= channel.lower[index]);
         }
     }
+}
+
+#[test]
+fn yang_zhang_removes_constant_overnight_drift() {
+    let close: Vec<f64> = (0..12).map(|index| 100.0 * 1.01_f64.powi(index)).collect();
+    let out = volatility(
+        &close,
+        &close,
+        &close,
+        &close,
+        5,
+        252.0,
+        VolatilityEstimator::YangZhang,
+    )
+    .unwrap();
+    assert!(out.last().unwrap().abs() < 1e-12);
+}
+
+#[test]
+fn estimators_only_require_their_formula_inputs() {
+    let close = [100.0, 101.0, 102.0, 103.0];
+    let missing = [f64::NAN; 4];
+    let out = volatility(
+        &missing,
+        &missing,
+        &missing,
+        &close,
+        2,
+        252.0,
+        VolatilityEstimator::CloseToClose,
+    )
+    .unwrap();
+    assert!(out[2].is_finite());
+
+    assert_eq!(
+        volatility(
+            &close,
+            &close,
+            &close,
+            &close,
+            1,
+            252.0,
+            VolatilityEstimator::YangZhang,
+        ),
+        Err(IndicatorError::InvalidParameter("yang_zhang period"))
+    );
 }
