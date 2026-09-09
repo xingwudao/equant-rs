@@ -10,6 +10,8 @@ pub mod trend;
 pub mod momentum;
 /// Price-range, channel, and historical volatility measures.
 pub mod volatility;
+/// Volume, money-flow, and accumulation measures.
+pub mod volume;
 
 pub use error::IndicatorError;
 
