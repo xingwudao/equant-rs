@@ -12,6 +12,8 @@ pub mod momentum;
 pub mod volatility;
 /// Volume, money-flow, and accumulation measures.
 pub mod volume;
+/// Price structure, swing, pivot, and stop-and-reverse operators.
+pub mod structure;
 
 pub use error::IndicatorError;
 
